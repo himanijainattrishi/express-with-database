@@ -1,0 +1,82 @@
+first npm init -y to create package.json
+2. npm i express to create package-lock-json : as a backend framework
+3. npm i mongodb// as a database
+4. npm i mongoose// as a middle man to make it eaiser to talk to database
+
+app.js-> 
+    require express
+    make app 
+    listen to port
+    and add succes  callback 
+
+
+________________________
+-> make config folder 
+-----------
+app.js
+config folder-> dbConfig.js
+package.json
+node_modules
+package-lock.json
+.git-ignore
+
+___________________________
+in dbConfig.js-> add your password in place of <user-password>
+const mongoose=require('mongoose');
+mongoose.connect(paste url);
+
+for url copy-> cluster-> connect-> dbdriver-> url copy
+________________________-
+->mongodb atlas dashboard
+
+connect-> drivers-> url copy-> done
+ network access-> Add Ip Address-> Allow access from anywhere->confirm
+
+
+if password forget 
+ database access->edit-> write new password->update user
+
+ ________________________________________-
+ mongodb structure
+ -> project(No physical significance)
+    -> cluser(Machine)
+            -> database
+                    -> collection
+                        -> document  (BSON) binary+json
+
+____________________-
+create databse
+cluseter->browes collection-> create database
+
+___________________________________
+dbconfig file-> in dbconfig file in your connection url mention the database name after last "/" and before "?"
+
+___________________________
+app.js
+config folder-> dbConfig.js
+package.json
+node_modules
+package-lock.json
+.git-ignore
+
+now structure change
+ models-> productModel.js
+
+ in productModel.js(make schema)
+ https://mongoosejs.com/docs/guide.html
+___________________________________
+homework:
+mongdb compass
+
+
+
+
+
+
+
+
+
+
+________________________
+Mongodb usernamehimanijain22
+pwd   Smile
