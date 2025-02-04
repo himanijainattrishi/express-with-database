@@ -1,7 +1,16 @@
 const express = require('express');
+const morgan=require('morgan')// it will print whole data to console when we use postman it will print 
+//whole data to console.
 require('./config/dbConfig.js')
 const Product = require('./models/productModel.js')
 const app = express();
+// it will print request has recived
+app.use((req,res,next)=>{
+    console.log("-> Request received", req.url)
+    next();
+})
+
+app.use(morgan());
 app.use(express.json());// it returen middle wareand read body(req.body)
 
 app.post("/api/v1/products", async (req, res) => {
@@ -92,9 +101,10 @@ app.post("/api/v1/products", async (req, res) => {
 //pagination
 
 //http://localhost:1100/api/v1/products?q=tc&size=2
+//fields="-_id -__v -createdAt -updatedAt (dont want to see these fields)
 app.get("/api/v1/products", async (req, res) => {
     try {
-        const {q="",size=2,page=1}=req.query
+        const {q="",size=2,page=1,fields="-_id -__v -createdAt -updatedAt"}=req.query
 
         console.log(q)
         const productQuery = Product.find();
@@ -107,6 +117,7 @@ app.get("/api/v1/products", async (req, res) => {
         const productQueryClone=productQuery.clone();
         productQuery.skip((page-1)*size);
         productQuery.limit(size)
+        productQuery.select(fields)
         const products=await productQuery;
         const totalProducts=await productQueryClone.countDocuments();
         res.json({
