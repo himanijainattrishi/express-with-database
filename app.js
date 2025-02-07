@@ -151,25 +151,135 @@ app.get("/api/v1/products", async (req, res) => {
 //     "password":"abes"
 //     }
 
-//for user Register
+//for user Register API
+// app.post("/api/v1/user/Register", async (req, res) => {
+//     try {
+//         const userInfo = req.body;
+//         // if(userInfo.password.length<=7){
+//         //     res.status(400);
+//         // }
+//         const salt = await bcrypt.genSalt(14); // create number like 2^14.for creating password
+//         const hashedPassword = await bcrypt.hash(userInfo.password, salt);
+//         userInfo.password = hashedPassword;
+//         console.log(user)
+
+//         const userdata = await user.create(userInfo);
+//         res.status(201);// It is created successfully
+
+//         res.json({
+//             status: "success",
+//             data: userdata,
+//         });
+//     }
+//     catch (err) {
+//         console.log(err.message)
+
+//         if (err.code == 11000 || err.name === 'ValidationError') {
+//             res.status(400).json({
+//                 status: 'fail',
+//                 message: "data validation failed" + err.message
+//             });
+//         }
+//         else {
+//             res.status(500).json({
+//                 status: 'fail',
+//                 message: 'Internal Server Error',
+//             })
+//         }
+
+
+//     }
+
+// }
+// );
+
+
+
 app.post("/api/v1/user/Register", async (req, res) => {
     try {
-        const userInfo = req.body;
+        const { otp, email, password } = req.body;
+
+        if(!otp || !email || !password)
+        {
+            res.status(400)
+            res.json({
+                status: "fail",
+                message: "All fields are required"
+            });
+            return;
+        }
+
+        // if email already exist in the user collection (handle this case)
+
+        
         // if(userInfo.password.length<=7){
         //     res.status(400);
         // }
-        const salt = await bcrypt.genSalt(14); // create number like 2^14.for creating password
-        const hashedPassword = await bcrypt.hash(userInfo.password, salt);
-        userInfo.password = hashedPassword;
-        console.log(user)
+        //otp that is sent within last x=10 minutes;
+        const otpDoc = await OTP.findOne({
+            createdAt: {
+                $gte: Date.now() - 10 * 60 * 1000,
+            },
+            email: email,
+        });
+// or we can write
+// const otpDoc = await OTP.findOne()
+// .where("createdAt")
+// .gte(Date.now() - 10 * 60 * 1000)
+// .where("email")
+// .equals(email);
+if(otpDoc===null)
+{
+    res.status(400)
+    res.json({
+        status: "fail",
+        message: "Eithher otp has expired or was not sent"
+    });
+    return;
+}
 
-        const userdata = await user.create(userInfo);
-        res.status(201);// It is created successfully
-
+const hashedOtp=otpDoc.otp;
+const isOtpValid=await bcrypt.compare(otp.toString(),hashedOtp);
+if(isOtpValid){
+    const salt = await bcrypt.genSalt(14); // create number like 2^14.for creating password
+         const hashedPassword = await bcrypt.hash(password, salt);
+        const newUser=await user.create({
+            email,
+            password: hashedPassword,
+        });
+        res.status(201);
         res.json({
             status: "success",
-            data: userdata,
+            message: "User registered successfully"
         });
+
+}
+else
+{
+    res.status(401);
+    res.json({
+        status: "Fail",
+        message: "incorrect OTP"
+    });
+}
+
+
+
+
+       // res.json(otpDoc)
+
+        // const salt = await bcrypt.genSalt(14); // create number like 2^14.for creating password
+        // const hashedPassword = await bcrypt.hash(userInfo.password, salt);
+        // userInfo.password = hashedPassword;
+        // console.log(user)
+
+        // const userdata = await user.create(userInfo);
+        // res.status(201);// It is created successfully
+
+        // res.json({
+        //     status: "success",
+        //     data: userdata,
+        // });
     }
     catch (err) {
         console.log(err.message)
@@ -193,27 +303,31 @@ app.post("/api/v1/user/Register", async (req, res) => {
 }
 );
 
+
+
+
 //first we have to go google manage account
 // 2 step verification
+
 // search-> app password
 
-//for OTP
+//for OTP API
 // for postman: http://localhost:1100/api/v1/otps
 // now check body raw. and {
-   // "email" : "himanijain1987ap@gmail.com"
+// "email" : "himanijain1987ap@gmail.com"
 //}
 app.post("/api/v1/otps", async (req, res) => {
     try {
 
         const { email } = req.body;
         //email is required
-       
+
         if (email && email.length > 0) {
             const otp = Math.floor(Math.random() * 9000 + 1000);
             const isEmailSent = await sendEmail(email, otp);
             if (isEmailSent) {
-                const hashedOtp=await bcrypt.hash(otp.toString(),14)
-                await OTP.create({email,otp:hashedOtp});
+                const hashedOtp = await bcrypt.hash(otp.toString(), 14)
+                await OTP.create({ email, otp: hashedOtp });
                 res.status(201).json({
                     status: "success",
                     message: "OTP has been sent successfully",
